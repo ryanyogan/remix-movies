@@ -1,0 +1,7 @@
+compatibility_date = "2023-06-21"
+name = "ryan-movies"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "remix-movies-db"
+database_id = "70ad7683-ed63-40bf-8b59-832dba4e3610"

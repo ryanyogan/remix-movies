@@ -10,7 +10,9 @@
     "lint": "eslint --ignore-path .gitignore --cache --cache-location ./node_modules/.cache/eslint .",
     "start": "wrangler pages dev ./build/client",
     "typecheck": "tsc",
-    "typegen": "wrangler types"
+    "typegen": "wrangler types",
+    "pages:deploy": "npm run build && npm run db:migrate && wrangler pages deploy ./public",
+    "db:migrate": "wrangler d1 migrations apply remix-movies-db"
   },
   "dependencies": {
     "@remix-run/cloudflare": "^2.8.1",
