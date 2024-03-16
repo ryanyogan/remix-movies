@@ -3,7 +3,12 @@ import {
   type LoaderFunctionArgs,
   type MetaFunction,
 } from "@remix-run/cloudflare";
-import { Await, Link, useLoaderData } from "@remix-run/react";
+import {
+  Await,
+  ClientLoaderFunctionArgs,
+  Link,
+  useLoaderData,
+} from "@remix-run/react";
 import { Suspense, useEffect, useState } from "react";
 
 export const meta: MetaFunction = () => {
@@ -27,13 +32,27 @@ export async function loader({ context }: LoaderFunctionArgs) {
   });
 }
 
+// Here we are using a client loader to call the server loader, first
+// we check to see if there is a cache, in-memory, of the query data,
+// which would give a faster response time, when clicking back.
+let cache: unknown;
+export async function clientLoader({ serverLoader }: ClientLoaderFunctionArgs) {
+  if (cache) return { query: cache };
+  const loaderData = await serverLoader();
+  const query = (loaderData as { query: unknown }).query;
+  cache = query;
+  return { query };
+}
+
+clientLoader.hydrate = true;
+
 export default function Index() {
   const { query } = useLoaderData<typeof loader>();
 
   return (
     <div>
       <p>You can search</p>
-      <Suspense fallback={<div>Loading...</div>}>
+      <Suspense fallback={<Loading />}>
         <Await resolve={query}>
           {(query) => {
             return (
@@ -84,4 +103,20 @@ function MovieLink({
       {movie.title}
     </Link>
   );
+}
+
+function Loading() {
+  return (
+    <ul>
+      {Array.from({ length: 12 }).map((_, i) => (
+        <li key={i}>
+          <RandomLengthDashes /> <RandomLengthDashes /> <RandomLengthDashes />
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+function RandomLengthDashes() {
+  return <span>{"-".repeat(Math.floor(Math.random() * 20))}</span>;
 }
