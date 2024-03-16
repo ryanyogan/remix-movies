@@ -6,6 +6,8 @@ import {
   ScrollRestoration,
 } from "@remix-run/react";
 
+import "./styles/tailwind.css";
+
 export function Layout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
@@ -15,8 +17,11 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Meta />
         <Links />
       </head>
-      <body>
-        {children}
+      <body className="antialiased bg-gray-100 text-gray-900">
+        <div className="max-w-lg mx-auto flex flex-col font-mono p-10 justify-between">
+          <h1 className="text-3xl font-bold">Movies!</h1>
+          {children}
+        </div>
         <ScrollRestoration />
         <Scripts />
       </body>
