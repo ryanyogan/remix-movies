@@ -6,6 +6,7 @@ import {
   ScrollRestoration,
 } from "@remix-run/react";
 
+import Search from "./routes/search";
 import "./styles/tailwind.css";
 
 export function Layout({ children }: { children: React.ReactNode }) {
@@ -18,8 +19,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Links />
       </head>
       <body className="antialiased bg-gray-100 text-gray-900">
-        <div className="max-w-2xl mx-auto flex flex-col font-mono p-10 justify-between">
-          <h1 className="text-3xl font-bold">Movies!</h1>
+        <div className="max-w-2xl flex flex-col font-mono p-10 justify-between">
+          <h1 className="text-3xl font-semibold">Movies</h1>
+          <Search />
           {children}
         </div>
         <ScrollRestoration />

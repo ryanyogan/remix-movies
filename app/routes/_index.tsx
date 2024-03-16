@@ -51,7 +51,10 @@ export default function Index() {
 
   return (
     <div>
-      <p>You can search</p>
+      <p className="text-slate-800 font-light text-sm my-4">
+        Use Command + K to search. Here are a few random movies from the
+        database.
+      </p>
       <Suspense fallback={<Loading />}>
         <Await resolve={query}>
           {(query) => {
@@ -73,10 +76,15 @@ export default function Index() {
   );
 }
 
-function MovieLink({
+export function MovieLink({
   movie,
 }: {
-  movie: { thumbnail: string; title: string; id: number };
+  movie: {
+    extract?: string;
+    thumbnail?: string;
+    title?: string;
+    id?: number;
+  };
 }) {
   const [prefetch, setPrefetch] = useState<"intent" | "none">("intent");
 
@@ -89,12 +97,12 @@ function MovieLink({
   const prefetchImage = () => {
     if (prefetch === "none") return;
     const img = new Image();
-    img.src = movie.thumbnail;
+    img.src = movie.thumbnail as string;
   };
 
   return (
     <Link
-      className="text-blue-600 underline"
+      className="text-blue-700 underline text-sm font-semibold"
       to={`/movie/${movie.id}`}
       prefetch={prefetch}
       onMouseEnter={prefetchImage}
