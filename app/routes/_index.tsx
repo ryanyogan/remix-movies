@@ -1,4 +1,10 @@
-import type { MetaFunction } from "@remix-run/cloudflare";
+import {
+  defer,
+  type LoaderFunctionArgs,
+  type MetaFunction,
+} from "@remix-run/cloudflare";
+import { Await, Link, useLoaderData } from "@remix-run/react";
+import { Suspense, useEffect, useState } from "react";
 
 export const meta: MetaFunction = () => {
   return [
@@ -10,10 +16,72 @@ export const meta: MetaFunction = () => {
   ];
 };
 
+export async function loader({ context }: LoaderFunctionArgs) {
+  const { env } = context.cloudflare;
+
+  return defer({
+    // @ts-expect-error - We're not using TypeScript here, so we can ignore this error
+    query: env.DB.prepare(
+      `SELECT * FROM movies WHERE thumbnail != '' ORDER BY RANDOM() LIMIT 12`
+    ).all(),
+  });
+}
+
 export default function Index() {
+  const { query } = useLoaderData<typeof loader>();
+
   return (
-    <div style={{ fontFamily: "system-ui, sans-serif", lineHeight: "1.8" }}>
-      <h1>Welcome to Remix (with Vite and Cloudflare)</h1>
+    <div>
+      <p>You can search</p>
+      <Suspense fallback={<div>Loading...</div>}>
+        <Await resolve={query}>
+          {(query) => {
+            return (
+              <ul>
+                {query.results.map(
+                  (movie: { id: number; title: string; thumbnail: string }) => (
+                    <li key={movie.id}>
+                      <MovieLink movie={movie} />
+                    </li>
+                  )
+                )}
+              </ul>
+            );
+          }}
+        </Await>
+      </Suspense>
     </div>
+  );
+}
+
+function MovieLink({
+  movie,
+}: {
+  movie: { thumbnail: string; title: string; id: number };
+}) {
+  const [prefetch, setPrefetch] = useState<"intent" | "none">("intent");
+
+  useEffect(() => {
+    if (sessionStorage.getItem(`movie-${movie.id}`)) {
+      setPrefetch("none");
+    }
+  }, [movie.id]);
+
+  const prefetchImage = () => {
+    if (prefetch === "none") return;
+    const img = new Image();
+    img.src = movie.thumbnail;
+  };
+
+  return (
+    <Link
+      className="text-blue-600 underline"
+      to={`/movie/${movie.id}`}
+      prefetch={prefetch}
+      onMouseEnter={prefetchImage}
+      onFocus={prefetchImage}
+    >
+      {movie.title}
+    </Link>
   );
 }
