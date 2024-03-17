@@ -1,6 +1,8 @@
 /* eslint-disable jsx-a11y/no-static-element-interactions */
 /* eslint-disable jsx-a11y/click-events-have-key-events */
 import { LoaderFunctionArgs } from "@remix-run/cloudflare";
+import { ClientLoaderFunctionArgs } from "@remix-run/react";
+import localforage from "localforage";
 import { useEffect, useRef, useState } from "react";
 import { useFetcher, useNavigation } from "react-router-dom";
 import { MovieLink } from "./_index";
@@ -28,6 +30,53 @@ export async function loader({
 
   return query.results;
 }
+
+export async function clientLoader({
+  serverLoader,
+  request,
+}: ClientLoaderFunctionArgs) {
+  if (memory.length === 0) {
+    replicateMovies();
+    return serverLoader();
+  }
+
+  const q = new URL(request.url).searchParams.get("q");
+  if (!q) return [];
+
+  const matches = [];
+  for (const movie of memory) {
+    if (
+      movie.title.toLowerCase().includes(q) ||
+      movie.extract.toLowerCase().includes(q)
+    ) {
+      matches.push(movie);
+    }
+
+    if (matches.length >= 20) break;
+  }
+
+  return matches;
+}
+
+type Movie = {
+  id: number;
+  title: string;
+  extract: string;
+};
+
+let memory: Movie[] = [];
+const replicateMovies = async () => {
+  const cached = await localforage.getItem("all-movies");
+  if (cached) {
+    memory = cached as Movie[];
+    return;
+  }
+
+  const response = await fetch("/all-movies.json");
+  const movies = await response.json();
+  localforage.setItem("all-movies", movies);
+  memory = movies as Movie[];
+};
 
 export default function Search() {
   const [show, setShow] = useState(false);
